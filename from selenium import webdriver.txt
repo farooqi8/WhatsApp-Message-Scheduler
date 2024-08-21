@@ -1,0 +1,50 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+import datetime
+
+# Initialize the driver
+driver = webdriver.Chrome(executable_path='YOUR_CHROME_DRIVER_PATH')
+
+def send_message(contact_name, message, send_time):
+    # Open WhatsApp Web
+    driver.get("https://web.whatsapp.com/")
+    wait = WebDriverWait(driver, 60)
+    
+    # Wait for QR code scan
+    input("Scan the QR code and then press Enter here to continue...")
+    
+    # Search for the contact
+    search_box = wait.until(EC.presence_of_element_located((By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]')))
+    search_box.clear()
+    search_box.send_keys(contact_name)
+    search_box.send_keys(Keys.ENTER)
+    
+    # Wait until the correct chat is opened
+    wait.until(EC.presence_of_element_located((By.XPATH, f'//span[@title="{contact_name}"]')))
+    
+    # Wait until the specified send time
+    while True:
+        current_time = datetime.datetime.now().strftime('%H:%M')
+        if current_time >= send_time:
+            break
+        time.sleep(10)  # Check every 10 seconds
+
+    # Type the message
+    message_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="6"]')
+    message_box.send_keys(message)
+    
+    # Send the message
+    send_button = driver.find_element(By.XPATH, '//button[@data-icon="send"]')
+    send_button.click()
+    
+    print("Message sent successfully!")
+
+if __name__ == "__main__":
+    contact_name = input("Enter the contact name: ")
+    message = input("Enter your message: ")
+    send_time = input("Enter the send time (HH:MM, 24-hour format): ")
+    send_message(contact_name, message, send_time)
